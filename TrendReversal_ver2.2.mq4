@@ -139,10 +139,18 @@ for(int qqq=0;qqq<total;qqq++)
       
    
     RefreshRates();
-    if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_SELLSTOP,lot,Low[1]-filtr*k*Point,Slipage*k,Low[1]-filtr*k*Point+SL*k*Point,Low[1]-filtr*k*Point-TP*k*Point,"TrendReversal2",Magic_Number,0,Red) < 0) 
+    if (IsTradeAllowed()) { 
+    
+    
+    if(    OrderSend(Symbol(),OP_SELLSTOP,lot,Low[1]-filtr*k*Point,Slipage*k,Low[1]-filtr*k*Point+SL*k*Point,Low[1]-filtr*k*Point-TP*k*Point,"TrendReversal2",Magic_Number,0,Red) < 0) 
       
       { 
         Alert("Ошибка открытия позиции № ", GetLastError()); 
+        while(GetLastError()==132 ) { if (OrderSend(Symbol(),OP_SELLSTOP,lot,Low[1]-filtr*k*Point,Slipage*k,Low[1]-filtr*k*Point+SL*k*Point,Low[1]-filtr*k*Point-TP*k*Point,"TrendReversal2",Magic_Number,0,Red) > 0) {break;}    }
+        
+        
+        
+        
       }}
 Sleep(SleepTime*100);
     
@@ -158,7 +166,11 @@ Sleep(SleepTime*100);
     RefreshRates();
  if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUYSTOP,lot,High[1]+filtr*k*Point,Slipage*k,High[1]+filtr*k*Point-SL*k*Point,High[1]+filtr*k*Point+TP*k*Point,"TrendReversal2",Magic_Number,0,Blue) < 0) 
       { 
-        Alert("Ошибка открытия позиции № ", GetLastError()); 
+        Alert("Ошибка открытия позиции № ", GetLastError());
+        
+         while(GetLastError()==132 ) { if (OrderSend(Symbol(),OP_BUYSTOP,lot,High[1]+filtr*k*Point,Slipage*k,High[1]+filtr*k*Point-SL*k*Point,High[1]+filtr*k*Point+TP*k*Point,"TrendReversal2",Magic_Number,0,Blue)>0) {break;}    }
+        
+         
       } }
 Sleep(SleepTime*100);
     
