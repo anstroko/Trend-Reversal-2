@@ -21,6 +21,8 @@ bool BuTranz=false;
 double Stop;
 bool flag_sell=false,flag_buy=false;
 int i;
+bool NewTraid;
+bool TraidToday;
 
 int init()
 {
@@ -38,7 +40,21 @@ int start()
 {
 
 bool OpenOrder=false;
-  int total=OrdersTotal();
+int total=OrdersTotal();
+
+if (NewTraid==true){
+   for(int in=0;in<OrdersTotal();in++)
+     {      if(OrderSelect(in,SELECT_BY_POS)==true)
+        {
+         if((OrderSymbol()==Symbol())&&(OrderMagicNumber()==Magic_Number) )
+           {
+            if(OrderType()==OP_BUY){OrderModify(OrderTicket(),OrderOpenPrice(),OrderOpenPrice()-SL*k*Point,OrderOpenPrice()+TP*k*Point,0,Orange); }
+            if(OrderType()==OP_SELL){OrderModify(OrderTicket(),OrderOpenPrice(),OrderOpenPrice()+SL*k*Point,OrderOpenPrice()-TP*k*Point,0,Orange);}
+    
+           }
+        }
+     }
+     }
   
   if ((TradeWithBu==true)&&(BuTranz==false)){
 for(int qq=0;qq<total;qq++)
@@ -51,7 +67,7 @@ for(int qq=0;qq<total;qq++)
           
           if (OrderType()==OP_BUY) { 
                
-          if ((MarketInfo(OrderSymbol(), MODE_ASK)-OrderOpenPrice()>BU*Point)&&(OrderMagicNumber() == Magic_Number )) {
+          if ((MarketInfo(OrderSymbol(), MODE_ASK)-OrderOpenPrice()>BU*k*Point)&&(OrderMagicNumber() == Magic_Number )) {
         if (IsTradeAllowed() ){OrderModify(OrderTicket(),OrderOpenPrice(),OrderOpenPrice(),OrderTakeProfit(),0,Blue); 
            BuTranz=true;}
          }
@@ -59,7 +75,7 @@ for(int qq=0;qq<total;qq++)
             }
            
  if (OrderType()==OP_SELL) { 
-          if ((MarketInfo(OrderSymbol(), MODE_ASK)-OrderOpenPrice()<-BU*Point)&&(OrderMagicNumber() == Magic_Number )) {
+          if ((MarketInfo(OrderSymbol(), MODE_ASK)-OrderOpenPrice()<-BU*k*Point)&&(OrderMagicNumber() == Magic_Number )) {
         if (IsTradeAllowed() ){ OrderModify(OrderTicket(),OrderOpenPrice(),OrderOpenPrice(),OrderTakeProfit(),0,Blue); 
             BuTranz=true; }}
        }}}}
@@ -76,8 +92,8 @@ for(int qqq=0;qqq<total;qqq++)
           
           if (OrderType()==OP_BUY) { 
                
-          if ((MarketInfo(OrderSymbol(), MODE_ASK)-OrderStopLoss()>Trall*Point)&&(OrderMagicNumber() == Magic_Number )) {
-            Stop=(MarketInfo(OrderSymbol(), MODE_ASK)-Trall*Point);
+          if ((MarketInfo(OrderSymbol(), MODE_ASK)-OrderStopLoss()>Trall*k*Point)&&(OrderMagicNumber() == Magic_Number )) {
+            Stop=(MarketInfo(OrderSymbol(), MODE_ASK)-Trall*k*Point);
            Print (Stop);
         if (IsTradeAllowed() ){OrderModify(OrderTicket(),OrderOpenPrice(),Stop,OrderTakeProfit(),0,Blue); 
            }
@@ -86,8 +102,8 @@ for(int qqq=0;qqq<total;qqq++)
             }
            
  if (OrderType()==OP_SELL) { 
-          if ((MarketInfo(OrderSymbol(), MODE_BID)-OrderStopLoss()<-Trall*Point)&&(OrderMagicNumber() == Magic_Number )) {
-          Stop=(MarketInfo(OrderSymbol(), MODE_BID)+Trall*Point);
+          if ((MarketInfo(OrderSymbol(), MODE_BID)-OrderStopLoss()<-Trall*k*Point)&&(OrderMagicNumber() == Magic_Number )) {
+          Stop=(MarketInfo(OrderSymbol(), MODE_BID)+Trall*k*Point);
             Print (Stop);
         if (IsTradeAllowed() ){ OrderModify(OrderTicket(),OrderOpenPrice(),Stop,OrderTakeProfit(),0,Blue); 
              }}
@@ -95,17 +111,39 @@ for(int qqq=0;qqq<total;qqq++)
   
   
   
-  
-  if ((DayOfWeek()==5)&&(TimeHour(TimeCurrent())==22)&&(TimeMinute(TimeCurrent())==00)){
-   for (int ii=OrdersTotal()-1; ii>=0; ii--)
-   {
-      if (!OrderSelect(ii,SELECT_BY_POS,MODE_TRADES)) break;
-            if ((OrderType()==OP_BUYSTOP  )&&(OrderMagicNumber() == Magic_Number )) OrderDelete(OrderTicket());
-      if ((OrderType()==OP_SELLSTOP )&&(OrderMagicNumber() == Magic_Number )) OrderDelete(OrderTicket());
-         }
-  
-  
-  }
+    NewTraid=false;
+     if (((High[1]-Low[1])>CandleSize*k*Point)||((Low[1]-High[1])>CandleSize*k*Point)&&(OpenOrder==false))        {   
+        if ((((Close[1]-Open[1])>BodySize*k*Point))&&(Bid<(Low[1]-filtr*k*Point))&&(TraidToday==false)) {        
+      
+   
+    RefreshRates();
+    if (IsTradeAllowed()) { 
+    
+    
+    if(OrderSend(Symbol(),OP_SELL,lot,Bid,Slipage*k,NULL,NULL,"TrendReversal2",Magic_Number,0,Red) < 0) 
+      
+      { 
+        Alert("Ошибка открытия позиции № ", GetLastError()); 
+      }
+      else
+      {
+      NewTraid=true;TraidToday=true;
+      } 
+      Sleep(SleepTime*100); 
+      }}    
+if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask>(High[1]+filtr*k*Point))&&(TraidToday==false)){
+   RefreshRates();
+ if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUY,lot,Ask,Slipage*k,NULL,NULL,"TrendReversal2",Magic_Number,0,Blue) < 0) 
+      { 
+        Alert("Ошибка открытия позиции № ", GetLastError());
+      }
+      else
+      {
+      NewTraid=true;TraidToday=true;
+      }   
+         Sleep(SleepTime*100);
+      } }
+ }
   
   
   
@@ -116,69 +154,11 @@ for(int qqq=0;qqq<total;qqq++)
   
   
   if(!isNewBar())return(0);
-   BuTranz=false;
+   BuTranz=false;TraidToday=false;
    Sleep(SleepTime*100);
- for (int i=OrdersTotal()-1; i>=0; i--)
-   {
-      if (!OrderSelect(i,SELECT_BY_POS,MODE_TRADES)) break;
-            if ((OrderType()==OP_BUYSTOP  )&&(OrderMagicNumber() == Magic_Number )) OrderDelete(OrderTicket());
-      if ((OrderType()==OP_SELLSTOP )&&(OrderMagicNumber() == Magic_Number )) OrderDelete(OrderTicket());
-         }
-          OpenOrder=false; 
-       for(int pos=0;pos<total;pos++)
-   {
-      // результат выбора проверки, так как ордер может быть закрыт или удален в это время!
-      if(OrderSelect(pos, SELECT_BY_POS)==true){ 
-    if (( OrderSymbol() == Symbol())&& (OrderMagicNumber() == Magic_Number )) {
-    OpenOrder=true;  
-    }}}    
-        Sleep(SleepTime*100);    
-     
-     if (((High[1]-Low[1])>CandleSize*k*Point)||((Low[1]-High[1])>CandleSize*k*Point)&&(OpenOrder==false))        {   
-        if ((Close[1]-Open[1])>BodySize*k*Point) {        
-      
-   
-    RefreshRates();
-    if (IsTradeAllowed()) { 
-    
-    
-    if(    OrderSend(Symbol(),OP_SELLSTOP,lot,Low[1]-filtr*k*Point,Slipage*k,Low[1]-filtr*k*Point+SL*k*Point,Low[1]-filtr*k*Point-TP*k*Point,"TrendReversal2",Magic_Number,0,Red) < 0) 
-      
-      { 
-        Alert("Ошибка открытия позиции № ", GetLastError()); 
-        while(GetLastError()==132 ) { if (OrderSend(Symbol(),OP_SELLSTOP,lot,Low[1]-filtr*k*Point,Slipage*k,Low[1]-filtr*k*Point+SL*k*Point,Low[1]-filtr*k*Point-TP*k*Point,"TrendReversal2",Magic_Number,0,Red) > 0) {break;}    }
-        
-        
-        
-        
-      }}
-Sleep(SleepTime*100);
-    
-      
-    
-  
-}
-      
-        if ((Open[1]-Close[1])>BodySize*k*Point){
-        
-        
-   
-    RefreshRates();
- if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUYSTOP,lot,High[1]+filtr*k*Point,Slipage*k,High[1]+filtr*k*Point-SL*k*Point,High[1]+filtr*k*Point+TP*k*Point,"TrendReversal2",Magic_Number,0,Blue) < 0) 
-      { 
-        Alert("Ошибка открытия позиции № ", GetLastError());
-        
-         while(GetLastError()==132 ) { if (OrderSend(Symbol(),OP_BUYSTOP,lot,High[1]+filtr*k*Point,Slipage*k,High[1]+filtr*k*Point-SL*k*Point,High[1]+filtr*k*Point+TP*k*Point,"TrendReversal2",Magic_Number,0,Blue)>0) {break;}    }
-        
-         
-      } }
-Sleep(SleepTime*100);
-    
-      
 
-}
-        
-      }
+     
+
    
    
    
