@@ -48,6 +48,7 @@ if (NewTraid==true){
         {
          if((OrderSymbol()==Symbol())&&(OrderMagicNumber()==Magic_Number) )
            {
+           OpenOrder=true;
             if(OrderType()==OP_BUY){OrderModify(OrderTicket(),OrderOpenPrice(),OrderOpenPrice()-SL*k*Point,OrderOpenPrice()+TP*k*Point,0,Orange); }
             if(OrderType()==OP_SELL){OrderModify(OrderTicket(),OrderOpenPrice(),OrderOpenPrice()+SL*k*Point,OrderOpenPrice()-TP*k*Point,0,Orange);}
     
@@ -113,7 +114,7 @@ for(int qqq=0;qqq<total;qqq++)
   
     NewTraid=false;
      if (((High[1]-Low[1])>CandleSize*k*Point)||((Low[1]-High[1])>CandleSize*k*Point)&&(OpenOrder==false))        {   
-        if ((((Close[1]-Open[1])>BodySize*k*Point))&&(Bid<(Low[1]-filtr*k*Point))&&(TraidToday==false)) {        
+        if ((((Close[1]-Open[1])>BodySize*k*Point))&&(Bid>(Low[1]-filtr*k*Point-10*k*Point))&&(Bid<(Low[1]-filtr*k*Point))&&(TraidToday==false)) {        
       
    
     RefreshRates();
@@ -131,7 +132,7 @@ for(int qqq=0;qqq<total;qqq++)
       } 
       Sleep(SleepTime*100); 
       }}    
-if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask>(High[1]+filtr*k*Point))&&(TraidToday==false)){
+if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Point))&&(Ask>(High[1]+filtr*k*Point))&&(TraidToday==false)){
    RefreshRates();
  if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUY,lot,Ask,Slipage*k,NULL,NULL,"TrendReversal2",Magic_Number,0,Blue) < 0) 
       { 
