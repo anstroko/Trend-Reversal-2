@@ -169,7 +169,7 @@ for(int qqq=0;qqq<total;qqq++)
       }
       else
       {
-      NewTraid=true;TraidToday=true;
+      NewTraid=true;TraidToday=true;SendMail("Открыт ордер на продажу "+Symbol()+Lot,NULL);
       } 
       Sleep(SleepTime*100); 
       }}    
@@ -184,7 +184,7 @@ if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Poin
       }
       else
       {
-      NewTraid=true;TraidToday=true;
+      NewTraid=true;TraidToday=true;SendMail("Открыт ордер на покупку "+Symbol()+Lot,NULL);
       }   
          Sleep(SleepTime*100);
       } }
