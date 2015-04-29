@@ -157,11 +157,10 @@ for(int qqq=0;qqq<total;qqq++)
       
    CheckLastOrder();
    CheckNextLot();
- 
+ Print("Открываем ордер на продажу ",CommentNextOrder);
     RefreshRates();
     if (IsTradeAllowed()) { 
     
-    Print(OpenOrder);
     if(OrderSend(Symbol(),OP_SELL,Lot,Bid,Slipage*k,NULL,NULL,CommentNextOrder,Magic_Number,0,Red) < 0) 
       
       { 
@@ -169,7 +168,7 @@ for(int qqq=0;qqq<total;qqq++)
       }
       else
       {
-      NewTraid=true;TraidToday=true;SendMail("Открыт ордер на продажу "+Symbol()+Lot,NULL);
+      NewTraid=true;TraidToday=true;SendMail("Открыт ордер на продажу "+Symbol(),"Торгуем"+Lot+" Ордер по счету "+CommentNextOrder);
       } 
       Sleep(SleepTime*100); 
       }}    
@@ -177,14 +176,14 @@ if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Poin
    CheckLastOrder();
    CheckNextLot();
    RefreshRates();
-  Print(OpenOrder);
+ Print("Открываем ордер на покупку ",CommentNextOrder);
  if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUY,Lot,Ask,Slipage*k,NULL,NULL,CommentNextOrder,Magic_Number,0,Blue) < 0) 
       { 
         Alert("Ошибка открытия позиции № ", GetLastError());
       }
       else
       {
-      NewTraid=true;TraidToday=true;SendMail("Открыт ордер на покупку "+Symbol()+Lot,NULL);
+      NewTraid=true;TraidToday=true;SendMail("Открыт ордер на покупку "+Symbol(),"Торгуем c лотом "+Lot+" Ордер по счету "+CommentNextOrder);
       }   
          Sleep(SleepTime*100);
       } }
@@ -223,7 +222,7 @@ if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Poin
 
 
 double CheckLastOrder(){
-
+loose=0;
 int totalh=OrdersHistoryTotal();
 for (int iei=totalh; iei>=0; iei--)
 {
@@ -232,10 +231,10 @@ if(OrderSelect(iei, SELECT_BY_POS,MODE_HISTORY ))
 
 if(OrderSymbol()==Symbol() &&OrderMagicNumber()==Magic_Number && (OrderProfit()<0)){
 loose=loose+1;
-break;
+
 }
 if(OrderSymbol()==Symbol() &&OrderMagicNumber()==Magic_Number && (OrderProfit()>0)){
-loose=0;
+
 break;
 }
 
