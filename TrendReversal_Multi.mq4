@@ -4,6 +4,7 @@ extern string Пapаметры=" Параметры советника";
 extern int TP=210;
 extern int SL=200;
 extern int filtr=-50;
+extern double RiskOnTreid;
 extern bool TradeWithBu=true;
 extern bool TradeWithTralling=true;
 extern int BU=100;
@@ -22,23 +23,13 @@ extern double lot5=0.03;
 extern double lot6=0.04;
 extern double lot7=0.06;
 extern double lot8=0.09;
-extern double lot9=0.13;
-extern double lot10=0.19;
-extern double lot11=0.28;
-extern double lot12=0.42;
-extern double lot13=0.62;
-extern double lot14=0.9;
-extern double lot15=0.28;
-extern double lot16=0.42;
-extern double lot17=0.62;
-extern double lot18=0.9;
-extern double lot19=0.28;
-extern double lot20=0.42;
-extern double lot21=0.62;
 
 
-
-
+double TotalLoose;
+double Koef=1;
+double CurSum;
+double RiskSumm;
+int kk;
 
 int k;
 bool BuTranz=false;
@@ -52,10 +43,20 @@ string CommentNextOrder;
 int loose;
 double Lot;
 bool OpenOrder=false;
+double S;
+
 int init()
 {
    if((Digits==3)||(Digits==5)) { k=10;}
    if((Digits==4)||(Digits==2)) { k=1;}
+
+   if (Digits==2){kk=100;}
+     if (Digits==3){kk=1000;}
+       if (Digits==4){kk=10000;}
+          if (Digits==5){kk=10000;}
+          Koef=1;
+   StoimPunkt();
+   
    return(0);
 }
 
@@ -66,6 +67,14 @@ int deinit()
 
 int start()
 {
+
+
+ ObjectCreate("label_object1",OBJ_LABEL,0,0,0);
+ObjectSet("label_object1",OBJPROP_CORNER,4);
+ObjectSet("label_object1",OBJPROP_XDISTANCE,10);
+ObjectSet("label_object1",OBJPROP_YDISTANCE,10);
+ObjectSetText("label_object1","Сумма убытка "+TotalLoose+ "Количество убытков"+loose,12,"Arial",Blue);
+
 OpenOrder=false;
 
 int total=OrdersTotal();
@@ -157,11 +166,13 @@ for(int qqq=0;qqq<total;qqq++)
       
    CheckLastOrder();
    CheckNextLot();
+      if (CommentNextOrder=="1"){
+   MMTrueFunctionSell();}
  Print("Открываем ордер на продажу ",CommentNextOrder);
     RefreshRates();
     if (IsTradeAllowed()) { 
     
-    if(OrderSend(Symbol(),OP_SELL,Lot,Bid,Slipage*k,NULL,NULL,CommentNextOrder,Magic_Number,0,Red) < 0) 
+    if(OrderSend(Symbol(),OP_SELL,Lot*NormalizeDouble(Koef,0),Bid,Slipage*k,NULL,NULL,CommentNextOrder,Magic_Number,0,Red) < 0) 
       
       { 
         Alert("Ошибка открытия позиции № ", GetLastError()); 
@@ -175,9 +186,11 @@ for(int qqq=0;qqq<total;qqq++)
 if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Point))&&(Ask>(High[1]+filtr*k*Point))&&(TraidToday==false)){
    CheckLastOrder();
    CheckNextLot();
+   if (CommentNextOrder=="1"){
+   MMTrueFunctionBuy();}
    RefreshRates();
  Print("Открываем ордер на покупку ",CommentNextOrder);
- if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUY,Lot,Ask,Slipage*k,NULL,NULL,CommentNextOrder,Magic_Number,0,Blue) < 0) 
+ if (IsTradeAllowed()) { if(    OrderSend(Symbol(),OP_BUY,Lot*NormalizeDouble(Koef,0),Ask,Slipage*k,NULL,NULL,CommentNextOrder,Magic_Number,0,Blue) < 0) 
       { 
         Alert("Ошибка открытия позиции № ", GetLastError());
       }
@@ -201,11 +214,7 @@ if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Poin
    BuTranz=false;TraidToday=false;
    Sleep(SleepTime*100);
 
-     
 
-   
-   
-   
    
   if(
   Orders_Total_by_type(OP_BUY, Magic_Number, Symbol()) > 0)
@@ -222,22 +231,30 @@ if (((Open[1]-Close[1])>BodySize*k*Point)&&(Ask<(High[1]+filtr*k*Point+10*k*Poin
 
 
 double CheckLastOrder(){
-loose=0;
+
 int totalh=OrdersHistoryTotal();
-for (int iei=totalh; iei>=0; iei--)
+for (int iei=totalh-1; iei>=0; iei--)
 {
 if(OrderSelect(iei, SELECT_BY_POS,MODE_HISTORY ))
 {
 
-if(OrderSymbol()==Symbol() &&OrderMagicNumber()==Magic_Number && (OrderProfit()<0)){
+if(OrderSymbol()==Symbol() && (OrderMagicNumber()==Magic_Number) && (OrderProfit()<0)&&(loose<8)){
 loose=loose+1;
-
-}
-if(OrderSymbol()==Symbol() &&OrderMagicNumber()==Magic_Number && (OrderProfit()>0)){
-
+TotalLoose=OrderProfit()+TotalLoose;
 break;
 }
-
+if(OrderSymbol()==Symbol() && (OrderMagicNumber()==Magic_Number) && (OrderProfit()<0)&&(loose==8)){
+TotalLoose=OrderProfit()+TotalLoose; break;
+}
+if(OrderSymbol()==Symbol() && (OrderMagicNumber()==Magic_Number) && (OrderProfit()>0)&&(loose<8)){
+if ((OrderProfit()-TotalLoose)>0) {TotalLoose=0;loose=0;break;}
+else {TotalLoose=TotalLoose+OrderProfit();}
+}
+if(OrderSymbol()==Symbol() && (OrderMagicNumber()==Magic_Number) && (OrderProfit()>0)&&(loose==8)){
+TotalLoose=TotalLoose+OrderProfit();
+if (TotalLoose>0){TotalLoose=0;loose=0;}
+break;
+}
 
 }}
 
@@ -250,19 +267,7 @@ if(loose=="5"){CommentNextOrder="6";}
 if(loose=="6"){CommentNextOrder="7";}
 if(loose=="7"){CommentNextOrder="8";}
 if(loose=="8"){CommentNextOrder="9";}
-if(loose=="9"){CommentNextOrder="10";}
-if(loose=="10"){CommentNextOrder="11";}
-if(loose=="11"){CommentNextOrder="12";}
-if(loose=="12"){CommentNextOrder="13";}
-if(loose=="13"){CommentNextOrder="14";}
-if(loose=="14"){CommentNextOrder="15";}
-if(loose=="15"){CommentNextOrder="16";}
-if(loose=="16"){CommentNextOrder="17";}
-if(loose=="17"){CommentNextOrder="18";}
-if(loose=="18"){CommentNextOrder="19";}
-if(loose=="19"){CommentNextOrder="20";}
-if(loose=="20"){CommentNextOrder="21";}
-if(loose=="21"){CommentNextOrder="21";}
+
 
 
 return(CommentNextOrder); }
@@ -279,22 +284,45 @@ if(CommentNextOrder=="5"){Lot=lot5;}
 if(CommentNextOrder=="6"){Lot=lot6;}
 if(CommentNextOrder=="7"){Lot=lot7;}
 if(CommentNextOrder=="8"){Lot=lot8;}
-if(CommentNextOrder=="9"){Lot=lot9;}
-if(CommentNextOrder=="10"){Lot=lot10;}
-if(CommentNextOrder=="11"){Lot=lot11;}
-if(CommentNextOrder=="12"){Lot=lot12;}
-if(CommentNextOrder=="13"){Lot=lot13;}
-if(CommentNextOrder=="14"){Lot=lot14;}
-if(CommentNextOrder=="15"){Lot=lot15;}
-if(CommentNextOrder=="16"){Lot=lot16;}
-if(CommentNextOrder=="17"){Lot=lot17;}
-if(CommentNextOrder=="18"){Lot=lot18;}
-if(CommentNextOrder=="19"){Lot=lot19;}
-if(CommentNextOrder=="20"){Lot=lot20;}
-if(CommentNextOrder=="21"){Lot=lot21;}
+
 
 return(Lot); }
 
+double StoimPunkt()
+{RefreshRates();
+if(MarketInfo(Symbol(),MODE_TICKVALUE)!=0&&MarketInfo(Symbol(),MODE_TICKSIZE)!=0&&MarketInfo(Symbol(),MODE_POINT)!=0){
+S = MarketInfo(Symbol(),MODE_TICKVALUE)/(MarketInfo(Symbol(),MODE_TICKSIZE)/MarketInfo(Symbol(),MODE_POINT));}
+return(S);}
+
+
+double MMTrueFunctionBuy ()
+{ RiskSumm=(AccountBalance())*RiskOnTreid/100;
+
+CurSum=0;
+Koef=1;
+while (RiskSumm>CurSum)
+{CurSum=(SL)*Koef*Lot*S*10;
+Koef=Koef+0.1;
+
+}
+
+
+return (Koef);}
+
+
+double MMTrueFunctionSell ()
+{ RiskSumm=(AccountBalance())*RiskOnTreid/100;
+
+CurSum=0;
+Koef=1;
+while (RiskSumm>CurSum)
+{CurSum=(SL)*Koef*Lot*S*10;
+Koef=Koef+0.1;
+
+}
+
+
+return (Koef);}
 
 bool isNewBar()
   {
